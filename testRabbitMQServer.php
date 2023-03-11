@@ -12,6 +12,10 @@ function doLogin($username,$password)
     //return false if not valid
 }
 
+//NEW FUNCTIONS ADDED FOR API USE 
+//
+//
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;

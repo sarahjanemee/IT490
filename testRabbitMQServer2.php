@@ -4,6 +4,7 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
+//NEW FUNCTIONS ADDED FOR API USE 
 
 function groceryList($grocerylist)
 {
@@ -190,7 +191,7 @@ function groceryRecipe($groceryrecipe)
 function keywordRecipe($keywordrecipe)
 {
         //basic search URL, doesn't have a query included 
-        $testURL="https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/complexSearch?query=";
+        $testURL="https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/search?query=";
 
         //split user input based on whitespace to format for URL
         $words = preg_split('/\s+/', $keywordrecipe, -1, PREG_SPLIT_NO_EMPTY);
@@ -222,13 +223,15 @@ function keywordRecipe($keywordrecipe)
         curl_close($curl);
 
         if ($err) {echo "cURL Error #:" . $err; }
-        else {echo $response;}
+        else {echo $response; return $response;}
 }
 
 
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
+  
+  try{
   var_dump($request);
   if(!isset($request['type']))
   {
@@ -240,23 +243,31 @@ function requestProcessor($request)
       return doLogin($request['username'],$request['password']);
     case "validate_session":
       return doValidate($request['sessionId']);
-	case "keywordrecipe":
+    case "keywordrecipe":
       return keywordRecipe($request['keywordrecipe']);
-	case "groceryrecipe":
+    case "groceryrecipe":
       return groceryRecipe($request['groceryrecipe']);
-	case "expirerecipe":
+    case "expirerecipe":
       return groceryRecipe($request['expirerecipe']);
-	case "grocerylist":
+    case "grocerylist":
       return groceryList($request['grocerylist']);
 	
   }
+  }
+
+catch(Exception $e){
+    $errClient = new rabbitMQClient("errorServer.ini","errorServer");
+    $errClient->send_request(['type' => 'DMZerrors', 'error' => $e->getMessage()]);
+}
+
+
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
 
 $server = new rabbitMQServer("testRabbitMQ.ini","DMZServer");
 
-echo "testRabbitMQServer BEGIN".PHP_EOL;
+//echo "testRabbitMQServer BEGIN".PHP_EOL;
 $server->process_requests('requestProcessor');
-echo "testRabbitMQServer END".PHP_EOL;
+//echo "testRabbitMQServer END".PHP_EOL;
 exit();
 ?>

@@ -191,7 +191,7 @@ function groceryRecipe($groceryrecipe)
 function keywordRecipe($keywordrecipe)
 {
         //basic search URL, doesn't have a query included 
-        $testURL="https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/complexSearch?query=";
+        $testURL="https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/search?query=";
 
         //split user input based on whitespace to format for URL
         $words = preg_split('/\s+/', $keywordrecipe, -1, PREG_SPLIT_NO_EMPTY);
@@ -230,6 +230,8 @@ function keywordRecipe($keywordrecipe)
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
+  
+  try{
   var_dump($request);
   if(!isset($request['type']))
   {
@@ -251,6 +253,14 @@ function requestProcessor($request)
       return groceryList($request['grocerylist']);
 	
   }
+  }
+
+catch(Exception $e){
+    $errClient = new rabbitMQClient("errorServer.ini","errorServer");
+    $errClient->send_request(['type' => 'DMZerrors', 'error' => $e->getMessage()]);
+}
+
+
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
 

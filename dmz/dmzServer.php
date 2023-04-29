@@ -1,8 +1,9 @@
 #!/usr/bin/php
 <?php
-require_once('path.inc');
-require_once('get_host_info.inc');
-require_once('rabbitMQLib.inc');
+$ROOT = "/home/sjm/git/IT490";
+require_once("$ROOT/rabbit/path.inc");
+require_once("$ROOT/rabbit/get_host_info.inc");
+require_once("$ROOT/rabbit/rabbitMQLib.inc");
 
 //NEW FUNCTIONS ADDED FOR API USE 
 
@@ -253,10 +254,10 @@ function requestProcessor($request)
       return groceryList($request['grocerylist']);
 	
   }
-  }
+}
 
 catch(Exception $e){
-    $errClient = new rabbitMQClient("errorServer.ini","errorServer");
+    $errClient = new rabbitMQClient("$ROOT/error_log/errorServerMQ.ini","errorServer");
     $errClient->send_request(['type' => 'DMZerrors', 'error' => $e->getMessage()]);
 }
 
@@ -264,7 +265,7 @@ catch(Exception $e){
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
 
-$server = new rabbitMQServer("testRabbitMQ.ini","DMZServer");
+$server = new rabbitMQServer("$ROOT/dmz/dmzServerMQ.ini","DMZServer");
 
 //echo "testRabbitMQServer BEGIN".PHP_EOL;
 $server->process_requests('requestProcessor');
